@@ -1,0 +1,28 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Maven wrapper downloaded locally
+apache-maven-*/
+maven.tar.gz
+maven-wrapper-distribution*.zip
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code / Eclipse
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
