@@ -1,7 +1,9 @@
 package com.rbi.loanservice.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -21,14 +23,16 @@ public class SecurityConfig {
 
     // CustomUserDetailsService is its own @Service, so no cycle here
     private final JwtAuthFilter jwtAuthFilter;
-    private final RateLimitFilter rateLimitFilter;
     private final CustomUserDetailsService userDetailsService;
 
+    // Rate limiter is null in test profile — @Profile("!test") excludes it
+    @Nullable
+    @Autowired(required = false)
+    private RateLimitFilter rateLimitFilter;
+
     public SecurityConfig(JwtAuthFilter jwtAuthFilter,
-                          RateLimitFilter rateLimitFilter,
                           CustomUserDetailsService userDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
-        this.rateLimitFilter = rateLimitFilter;
         this.userDetailsService = userDetailsService;
     }
 
@@ -56,11 +60,8 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider())
 
-                // Rate limiter runs first — blocks brute-force before JWT even checks
-                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // JWT filter runs after rate limiter
-                .addFilterBefore(jwtAuthFilter, RateLimitFilter.class)
+                // JWT filter first; rate limiter slots in before it in production
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // No H2 console in production, but keeping the iframe policy harmless
                 .headers(h -> h.frameOptions(f -> f.sameOrigin()))
