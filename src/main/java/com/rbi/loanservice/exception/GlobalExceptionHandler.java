@@ -56,6 +56,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
+    // Application ID not found — e.g. GET /applications/{unknown-id}
+    @ExceptionHandler(com.rbi.loanservice.service.ApplicationQueryService.ApplicationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", 404);
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
     // Catch-all — don't leak stack traces to the client
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
