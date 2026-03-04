@@ -8,10 +8,9 @@ The evaluation pipeline inside `LoanApplicationService` is deliberately linear a
 1. Classify risk band
 2. Compute interest rate
 3. Compute EMI
-4. Run eligibility checks (60% threshold)
-5. Run offer-gate check (50% threshold)
-6. Persist to DB
-7. Return structured response
+4. Run offer-gate check (50% threshold)
+5. Persist to DB
+6. Return structured response
 
 ---
 
@@ -20,12 +19,7 @@ The evaluation pipeline inside `LoanApplicationService` is deliberately linear a
 ### Flat JPA Entity
 Instead of `@Embedded` objects (Applicant, LoanDetails, Offer), I used a single flat `LoanApplication` entity. This keeps the schema simple, the audit record self-contained, and avoids unnecessary JPA complexity for a service that currently only writes (no complex queries).
 
-### Two EMI Thresholds (60% and 50%)
-The spec defines both: a **60% eligibility rejection** (in the Eligibility Rules section) and a **50% offer acceptance gate** (in the Offer Generation section). Both are enforced in order:
-- 60% check runs first via `EligibilityService` — if breached, reason is `EMI_EXCEEDS_60_PERCENT`
-- 50% offer check runs only if eligibility passes — if breached, reason is `EMI_EXCEEDS_50_PERCENT_OF_INCOME`
-
-This means any EMI between 50–60% of income hits the offer gate but not the eligibility gate — which is the correct interpretation of the spec.
+### EMI Threshold = 50%
 
 ### Service Decomposition
 `EmiCalculatorService`, `InterestRateService`, and `EligibilityService` are all pure computation classes with no side effects and no external dependencies. This makes them trivially unit testable without any mocking.
@@ -59,7 +53,7 @@ All financial math uses `scale=2, RoundingMode.HALF_UP` for final values. EMI ex
 
 ## Assumptions Made
 
-1. The spec says "reject if EMI > 60% of monthly income" (eligibility) AND "offer valid only if EMI ≤ 50%" — these are treated as two distinct, sequential gates.
+1. The spec says "reject if EMI > 60% of monthly income" (eligibility) AND "offer valid only if EMI ≤ 50%" — these are treated as two distinct, sequential gates. I have set 50% as the threshold.
 2. Age boundary is inclusive: `age + tenureMonths/12.0 > 65` (strictly greater than). Exactly 65 is allowed.
 3. The loan amount "10L threshold" for size premium uses strict `>` (above 10,00,000, not at or above).
 4. `totalPayable = EMI × tenureMonths` (simple multiplication, as is standard for fixed-rate reducing-balance loans).
