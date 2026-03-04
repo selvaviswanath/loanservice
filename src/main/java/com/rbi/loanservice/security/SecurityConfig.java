@@ -21,10 +21,14 @@ public class SecurityConfig {
 
     // CustomUserDetailsService is its own @Service, so no cycle here
     private final JwtAuthFilter jwtAuthFilter;
+    private final RateLimitFilter rateLimitFilter;
     private final CustomUserDetailsService userDetailsService;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter,
+                          RateLimitFilter rateLimitFilter,
+                          CustomUserDetailsService userDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.rateLimitFilter = rateLimitFilter;
         this.userDetailsService = userDetailsService;
     }
 
@@ -52,10 +56,13 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider())
 
-                // JWT filter runs before Spring's built-in username/password filter
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Rate limiter runs first — blocks brute-force before JWT even checks
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
 
-                // Allow H2 console frames (it uses iframes)
+                // JWT filter runs after rate limiter
+                .addFilterBefore(jwtAuthFilter, RateLimitFilter.class)
+
+                // No H2 console in production, but keeping the iframe policy harmless
                 .headers(h -> h.frameOptions(f -> f.sameOrigin()))
 
                 .build();
