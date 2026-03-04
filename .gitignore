@@ -6,6 +6,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Local environment variables — NEVER commit this file
+.env
+
+
 # Maven wrapper downloaded locally
 apache-maven-*/
 maven.tar.gz
