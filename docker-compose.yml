@@ -1,0 +1,39 @@
+services:
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:17-alpine
+    container_name: loandb
+    environment:
+      POSTGRES_DB: loandb
+      POSTGRES_USER: loanuser
+      POSTGRES_PASSWORD: loanpass123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loanuser -d loandb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Loan evaluation API
+  loan-service:
+    build: .
+    container_name: loan-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/loandb
+      DB_USERNAME: loanuser
+      DB_PASSWORD: loanpass123
+      # Generate a real secret: openssl rand -hex 32
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+
+volumes:
+  pgdata:
