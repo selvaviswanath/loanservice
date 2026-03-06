@@ -1,61 +1,42 @@
 package com.rbi.loanservice.domain;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "loan_applications")
 public class LoanApplication {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     // — Applicant info —
     private String applicantName;
     private int applicantAge;
     private BigDecimal monthlyIncome;
-
-    @Enumerated(EnumType.STRING)
     private EmploymentType employmentType;
-
     private int creditScore;
 
     // — Loan info —
     private BigDecimal loanAmount;
     private int tenureMonths;
-
-    @Enumerated(EnumType.STRING)
     private LoanPurpose loanPurpose;
 
     // — Decision —
-    @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
-
-    @Enumerated(EnumType.STRING)
-    private RiskBand riskBand; // null when rejected
-
+    private RiskBand riskBand;       // null when rejected
     private BigDecimal interestRate; // null when rejected
     private BigDecimal emi;          // null when rejected
     private BigDecimal totalPayable; // null when rejected
 
-    // Rejection reasons stored as comma-separated string (e.g. "CREDIT_SCORE_TOO_LOW,AGE_TENURE_LIMIT_EXCEEDED")
-    @Column(length = 500)
+    // Rejection reasons stored as comma-separated string
     private String rejectionReasons;
 
     private LocalDateTime createdAt;
 
-    @PrePersist
-    void onPersist() {
-        createdAt = LocalDateTime.now();
-    }
-
     // — Getters & Setters —
 
     public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getApplicantName() { return applicantName; }
     public void setApplicantName(String applicantName) { this.applicantName = applicantName; }
@@ -100,10 +81,12 @@ public class LoanApplication {
     public void setRejectionReasons(String rejectionReasons) { this.rejectionReasons = rejectionReasons; }
 
     // Convenience: split comma-separated reasons back into a list
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public List<String> getRejectionReasonsList() {
         if (rejectionReasons == null || rejectionReasons.isBlank()) return List.of();
         return List.of(rejectionReasons.split(","));
     }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

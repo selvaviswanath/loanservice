@@ -4,17 +4,15 @@ import com.rbi.loanservice.domain.ApplicationStatus;
 import com.rbi.loanservice.domain.LoanApplication;
 import com.rbi.loanservice.domain.RiskBand;
 import com.rbi.loanservice.dto.*;
-import com.rbi.loanservice.repository.LoanApplicationRepository;
+import com.rbi.loanservice.repository.JsonLoanApplicationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +27,7 @@ class LoanApplicationServiceTest {
     private EligibilityService eligibilityService;
 
     @Mock
-    private LoanApplicationRepository repository;
+    private JsonLoanApplicationRepository repository;
 
     private LoanApplicationService loanApplicationService;
 

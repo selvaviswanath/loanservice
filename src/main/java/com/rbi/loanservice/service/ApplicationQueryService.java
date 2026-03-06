@@ -3,23 +3,20 @@ package com.rbi.loanservice.service;
 import com.rbi.loanservice.domain.ApplicationStatus;
 import com.rbi.loanservice.dto.ApplicationSummary;
 import com.rbi.loanservice.dto.PagedResponse;
-import com.rbi.loanservice.repository.LoanApplicationRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import com.rbi.loanservice.repository.JsonLoanApplicationRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class ApplicationQueryService {
 
-    private final LoanApplicationRepository repository;
+    private final JsonLoanApplicationRepository repository;
 
-    public ApplicationQueryService(LoanApplicationRepository repository) {
+    public ApplicationQueryService(JsonLoanApplicationRepository repository) {
         this.repository = repository;
     }
 
@@ -44,23 +41,20 @@ public class ApplicationQueryService {
         // Clamp page size to avoid abuse
         size = Math.min(size, 100);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
         // Convert date boundaries to LocalDateTime (start of day / end of day)
         LocalDateTime fromDt = from != null ? from.atStartOfDay() : null;
         LocalDateTime toDt   = to   != null ? to.atTime(23, 59, 59) : null;
 
-        Page<ApplicationSummary> result = repository
-                .findWithFilters(status, fromDt, toDt, pageable)
-                .map(ApplicationSummary::from);
+        List<ApplicationSummary> content = repository
+                .findWithFilters(status, fromDt, toDt, page, size)
+                .stream()
+                .map(ApplicationSummary::from)
+                .toList();
 
-        return new PagedResponse<>(
-                result.getContent(),
-                result.getNumber(),
-                result.getSize(),
-                result.getTotalElements(),
-                result.getTotalPages()
-        );
+        long total = repository.countWithFilters(status, fromDt, toDt);
+        int totalPages = size == 0 ? 0 : (int) Math.ceil((double) total / size);
+
+        return new PagedResponse<>(content, page, size, total, totalPages);
     }
 
     /** Thrown when an application ID is not found — maps to 404. */

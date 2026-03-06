@@ -4,7 +4,7 @@ import com.rbi.loanservice.domain.ApplicationStatus;
 import com.rbi.loanservice.domain.LoanApplication;
 import com.rbi.loanservice.domain.RiskBand;
 import com.rbi.loanservice.dto.*;
-import com.rbi.loanservice.repository.LoanApplicationRepository;
+import com.rbi.loanservice.repository.JsonLoanApplicationRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,12 +17,12 @@ public class LoanApplicationService {
     private final InterestRateService interestRateService;
     private final EmiCalculatorService emiCalculatorService;
     private final EligibilityService eligibilityService;
-    private final LoanApplicationRepository repository;
+    private final JsonLoanApplicationRepository repository;
 
     public LoanApplicationService(InterestRateService interestRateService,
                                   EmiCalculatorService emiCalculatorService,
                                   EligibilityService eligibilityService,
-                                  LoanApplicationRepository repository) {
+                                  JsonLoanApplicationRepository repository) {
         this.interestRateService = interestRateService;
         this.emiCalculatorService = emiCalculatorService;
         this.eligibilityService = eligibilityService;
@@ -58,7 +58,6 @@ public class LoanApplicationService {
         );
 
         // Step 5: Even if eligibility passes, EMI must not exceed 50% of income for offer issuance
-        // This is a stricter offer-level gate than the 60% eligibility gate
         if (rejectionReasons.isEmpty()) {
             BigDecimal fiftyPercentOfIncome = applicant.getMonthlyIncome()
                     .multiply(new BigDecimal("0.50"))
@@ -102,14 +101,12 @@ public class LoanApplicationService {
         entity.setLoanPurpose(loan.getPurpose());
 
         if (rejectionReasons.isEmpty()) {
-            // Approved — save offer details
             entity.setStatus(ApplicationStatus.APPROVED);
             entity.setRiskBand(riskBand);
             entity.setInterestRate(rate);
             entity.setEmi(emi);
             entity.setTotalPayable(emiCalculatorService.calculateTotalPayable(emi, loan.getTenureMonths()));
         } else {
-            // Rejected — save why
             entity.setStatus(ApplicationStatus.REJECTED);
             entity.setRejectionReasons(String.join(",", rejectionReasons));
         }

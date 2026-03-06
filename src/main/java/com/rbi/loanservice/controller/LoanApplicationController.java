@@ -6,7 +6,6 @@ import com.rbi.loanservice.service.ApplicationQueryService;
 import com.rbi.loanservice.service.LoanApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,7 +18,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/applications")
 @Tag(name = "Loan Applications", description = "Submit and evaluate loan applications")
-@SecurityRequirement(name = "bearerAuth")
 public class LoanApplicationController {
 
     private final LoanApplicationService loanApplicationService;
@@ -66,4 +64,3 @@ public class LoanApplicationController {
         return ResponseEntity.ok(queryService.findAll(status, from, to, page, size));
     }
 }
-
